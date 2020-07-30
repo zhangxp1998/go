@@ -327,6 +327,13 @@ parseExtras:
 					return ErrFormat
 				}
 				f.UncompressedSize64 = fieldBuf.uint64()
+				// Some zip implementation would write 64 bit values even
+				// if the sizes are less than 4GB. In such situations, the
+				// 32 bit values contain 0xFFFFFFFF. So set UncompressedSize
+				// acocrdingly
+				if f.UncompressedSize64 < uint64(f.UncompressedSize) {
+					f.UncompressedSize = uint32(f.UncompressedSize64)
+				}
 			}
 			if needCSize {
 				needCSize = false
@@ -334,6 +341,9 @@ parseExtras:
 					return ErrFormat
 				}
 				f.CompressedSize64 = fieldBuf.uint64()
+				if f.CompressedSize64 < uint64(f.CompressedSize) {
+					f.CompressedSize = uint32(f.CompressedSize64)
+				}
 			}
 			if needHeaderOffset {
 				needHeaderOffset = false
